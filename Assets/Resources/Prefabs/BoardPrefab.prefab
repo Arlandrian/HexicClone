@@ -1,0 +1,74 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3618828202481760361
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3618828202481760363}
+  - component: {fileID: 3618828202481760360}
+  m_Layer: 0
+  m_Name: Board
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3618828202481760363
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3618828202481760361}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3618828202481760360
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3618828202481760361}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d6e3ec76ca5bb94fba2678ba8c661d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _hexSocketPrefab: {fileID: 1740718132554913198, guid: 9526292aed808bd478ec9e1756ca3028,
+    type: 3}
+  _dotPrefab: {fileID: 26114500651732260, guid: 69ce0a50a378b8941b95884f3454f31e,
+    type: 3}
+  _height: 9
+  _width: 8
+  _hexEdgeLength: 0.54
+  _boardStartOffset: {x: 1.02, y: 1.47, z: 0}
+  _hexTypes:
+  - Id: 0
+    TypeName: red
+    Prefab: {fileID: 3459951995070123075, guid: 9924a814ed064bd4781373577fd2aab2,
+      type: 3}
+  - Id: 1
+    TypeName: green
+    Prefab: {fileID: 3459951995070123075, guid: 87148b6e3e0eeab4fba4493b59090c30,
+      type: 3}
+  - Id: 2
+    TypeName: blue
+    Prefab: {fileID: 3459951995070123075, guid: 589819977744eb74e9b8699f2da3ebf3,
+      type: 3}
+  - Id: 3
+    TypeName: yellow
+    Prefab: {fileID: 3459951995070123075, guid: a10aa35cda7f5da408db0554a0835bae,
+      type: 3}
+  - Id: 4
+    TypeName: orange
+    Prefab: {fileID: 3459951995070123075, guid: 8ee358e408360c041b8696ea9aff753b,
+      type: 3}

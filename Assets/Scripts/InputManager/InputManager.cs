@@ -3,9 +3,30 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class InputManager : MonoBehaviour
+
+public class TouchEventArgs : EventArgs
 {
+    public Vector2 Position { get; set; }
+}
+
+public class SwipeEventArgs : EventArgs
+{
+    public Vector2 FirstTouchPosition { get; set; }
+    public Vector2 FinalTouchPosition { get; set; }
+}
+
+public class InputManager : Singleton<InputManager>
+{
+    #region Serialized Fields
+
+    [SerializeField] private float _touchSwipeDistanceThreshold = 0.5f;
+
+    #endregion
+
     #region
+
+    public event Action<TouchEventArgs> TouchEvent;
+    public event Action<SwipeEventArgs> SwipeEvent;
 
     #endregion
 
@@ -14,28 +35,28 @@ public class InputManager : MonoBehaviour
     private Vector2 _firstTouchPosition;
     private Vector2 _finalTouchPosition;
     private Touch _touch;
+    private RaycastHit2D[] _touchHits;
+    private GameObject _lastSelectedDot;
+
+    private TouchEventArgs _touchArgs;
+    private SwipeEventArgs _swipeArgs;
 
     #endregion
 
-    [SerializeField] private float _circleCastRadius = 1.0f;
-    [SerializeField] private float _touchSwipeDistanceThreshold = 0.5f;
-    
-
-    // Start is called before the first frame update
     void Start()
     {
-        
+        _touchArgs = new TouchEventArgs();
+        _swipeArgs = new SwipeEventArgs();
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        HandleInput();
     }
 
     private void HandleInput()
     {
-#if FALSE && (UNITY_EDITOR || UNITY_STANDALONE)
+#if (UNITY_EDITOR || UNITY_STANDALONE)
 
         if (Input.GetMouseButtonDown(0))
         {
@@ -57,8 +78,8 @@ public class InputManager : MonoBehaviour
                 OnSwipe();
             }
         }
-#elif UNITY_ANDROID || UNITY_IOS || TRUE
-        
+
+#elif UNITY_ANDROID || UNITY_IOS
         if (Input.touchCount > 0) {
             Touch touch = Input.GetTouch(0);
 
@@ -81,17 +102,20 @@ public class InputManager : MonoBehaviour
                     break;
             }
         }
-
 #endif
-    }
-
-    private void OnSwipe()
-    {
-        throw new NotImplementedException();
     }
 
     private void OnTouch()
     {
-        throw new NotImplementedException();
+        _touchArgs.Position = _finalTouchPosition;
+        TouchEvent?.Invoke(_touchArgs);
     }
+
+    private void OnSwipe()
+    {
+        _swipeArgs.FirstTouchPosition = _firstTouchPosition;
+        _swipeArgs.FinalTouchPosition = _finalTouchPosition;
+        SwipeEvent?.Invoke(_swipeArgs);
+    }
+
 }
