@@ -28,7 +28,7 @@ public class Board : MonoBehaviour
     [SerializeField]
     private Vector3 _boardStartOffset;
     [SerializeField]
-    private float _defaultOffsetForFilling = 5f;
+    private float _defaultOffsetForFilling = 0f;
 
     [Header("HexType Types"), Tooltip("Set the types of hexagons")]
     [SerializeField]
@@ -52,9 +52,6 @@ public class Board : MonoBehaviour
 
     private HexBehaviour[,] _board;
 
-    private BoardController _boardController;
-
-    [HideInInspector]
     private Transform _hexParent, _dotParent, _socketsParent;
 
     private bool _shouldSpawnBomb = false;
@@ -318,7 +315,6 @@ public class Board : MonoBehaviour
         }
 
         HashSet<int> columnnChecked = new HashSet<int>();
-
         // Notify all above hexes by changing their target position
         foreach(var matchIndex in matches)
         {
@@ -350,7 +346,6 @@ public class Board : MonoBehaviour
             }
         }
     }
-
 
     public void RotateDot(DotBehaviour dot, bool clockwise)
     {
@@ -391,7 +386,6 @@ public class Board : MonoBehaviour
                 _board[child3.x, child3.y] = temp;
                 _board[child3.x, child3.y].SetIndex(child3.x, child3.y, _hexSockets[child3.x, child3.y].transform);
 
-
             });
     }
 
@@ -413,6 +407,7 @@ public class Board : MonoBehaviour
 
     public void SpawnBomb()
     {
+        // next time creating a hex, it will be a bomb hex
         _shouldSpawnBomb = true;
     }
 
@@ -426,7 +421,7 @@ public class Board : MonoBehaviour
         StartCoroutine(DestroyAll());
     }
 
-    IEnumerator DestroyAll()
+    private IEnumerator DestroyAll()
     {
         foreach (HexBehaviour hex in _board)
         {
@@ -479,7 +474,6 @@ public class Board : MonoBehaviour
         return -1;
     }
 
-
     private IEnumerable<HexBehaviour> GetChildrenHexes(int dotIndexX, int dotIndexY)
     {
         foreach (Vector2Int children in GetChildrenIndex(dotIndexX, dotIndexY))
@@ -523,41 +517,6 @@ public class Board : MonoBehaviour
         }
     }
 
-    private IEnumerable<Vector2Int> GetChildrenIndexss(int dotIndexX, int dotIndexY)
-    {
-        float y = dotIndexY * 2 + 1;
-        if (dotIndexX % 2 == 0)
-        {
-            if (dotIndexY % 2 == 0)
-            {
-                yield return new Vector2Int(dotIndexX, dotIndexY);
-                yield return new Vector2Int(dotIndexX + 1, dotIndexY + 1);
-                yield return new Vector2Int(dotIndexX + 1, dotIndexY);
-            }
-            else
-            {
-                yield return new Vector2Int(dotIndexX, dotIndexY - 1);
-                yield return new Vector2Int(dotIndexX, dotIndexY);
-                yield return new Vector2Int(dotIndexX + 1, dotIndexY);
-            }
-        }
-        else
-        {
-            if (dotIndexY % 2 == 0)
-            {
-                yield return new Vector2Int(dotIndexX, dotIndexY + 1);
-                yield return new Vector2Int(dotIndexX, dotIndexY);
-                yield return new Vector2Int(dotIndexX + 1, dotIndexY);
-            }
-            else
-            {
-                yield return new Vector2Int(dotIndexX, dotIndexY);
-                yield return new Vector2Int(dotIndexX + 1, dotIndexY);
-                yield return new Vector2Int(dotIndexX + 1, dotIndexY - 1);
-            }
-        }
-    }
-
     private void ChangeHex(HexBehaviour hex)
     {
         // Get some other random type
@@ -573,20 +532,6 @@ public class Board : MonoBehaviour
         // replace old hex with new hex
         _board[hex.IndexX, hex.IndexY] = newHex;
         // Destroy old
-
-        Destroy(hex.gameObject);
-    }
-
-    private void DestroyHex(HexBehaviour hex)
-    {
-        //HexExplodedEvent
-        //MovementIncrementedEvent
-
-        if (hex.IsBomb)
-        {
-            MovementIncrementedEvent -= hex.OnMovementIncremented;
-        }
-
         Destroy(hex.gameObject);
     }
 

@@ -46,7 +46,7 @@ public class HexBehaviour : MonoBehaviour
 
     private void Awake()
     {
-        _gravity = Physics2D.gravity.y;///10f;
+        _gravity = Physics2D.gravity.y;
     }
 
     public void Init(Transform socket, int x, int y, HexType type)

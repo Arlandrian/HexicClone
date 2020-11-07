@@ -18,14 +18,9 @@ public class BoardController
 
     private Board _board;
     private DotBehaviour _lastSelectedDot;
-
-    private Touch _touch;
     private RaycastHit2D[] _touchHits;
 
     private bool _isBoardChanging = false;
-
-    // cw or ccw
-    private bool _lastRotationDirection = false;
     private int _rotationCounter = 0;
     private int _rotationTime = 3;
     private bool _isGameOver = false;
@@ -100,12 +95,10 @@ public class BoardController
         _rotationCounter = 0;
         if (Vector2.SignedAngle(OStart, OEnd) < 0.0f)
         {
-            _lastRotationDirection = true;
             OnClockwiseSwipe();
         }
         else
         {
-            _lastRotationDirection = false;
             OnCounterClockwiseSwipe();
         }
     }
@@ -132,12 +125,14 @@ public class BoardController
     {
         _isBoardChanging = true;
         bool flag = false;
+        // Rotate 3 times
         while (_rotationCounter < _rotationTime)
         {
             _board.RotateDot(_lastSelectedDot, isClockwise);
             yield return new WaitWhile(() => _lastSelectedDot.IsRotating);
 
             List<Vector2Int> matchess = _board.FindMatches();
+            // If match found stop rotating
             if(matchess.Count > 0)
             {
                 _board.ExplodeMatches(matchess);

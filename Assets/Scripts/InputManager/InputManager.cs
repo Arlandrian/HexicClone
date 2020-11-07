@@ -34,9 +34,6 @@ public class InputManager : Singleton<InputManager>
 
     private Vector2 _firstTouchPosition;
     private Vector2 _finalTouchPosition;
-    private Touch _touch;
-    private RaycastHit2D[] _touchHits;
-    private GameObject _lastSelectedDot;
 
     private TouchEventArgs _touchArgs;
     private SwipeEventArgs _swipeArgs;
