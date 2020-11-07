@@ -23,6 +23,7 @@ public class GameManager : Singleton<GameManager>
     {
         _UIManager = PrefabFactory.Instance.CreateUIManager();
         _boardController = PrefabFactory.Instance.CreateBoard();
+        RegisterBoard();
     }
 
     void RegisterBoard()
@@ -34,7 +35,7 @@ public class GameManager : Singleton<GameManager>
     private void AddScore(int score)
     {
         _score += score;
-        _UIManager.SetScoreText(score);
+        _UIManager.SetScoreText(_score);
     }
 
     private void IncrementMovement()

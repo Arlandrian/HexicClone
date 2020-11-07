@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 3618828202481760363}
   - component: {fileID: 3618828202481760360}
   m_Layer: 0
-  m_Name: Board
+  m_Name: BoardPrefab
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -47,10 +47,11 @@ MonoBehaviour:
     type: 3}
   _dotPrefab: {fileID: 26114500651732260, guid: 69ce0a50a378b8941b95884f3454f31e,
     type: 3}
-  _height: 9
+  _height: 11
   _width: 8
   _hexEdgeLength: 0.54
   _boardStartOffset: {x: 1.02, y: 1.47, z: 0}
+  _defaultOffsetForFilling: 0
   _hexTypes:
   - Id: 0
     TypeName: red

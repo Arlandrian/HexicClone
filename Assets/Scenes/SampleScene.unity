@@ -263,7 +263,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2044257031
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -298,6 +298,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 3618828202481760360, guid: cecf512b52fe2884aba599e671bc4bbf,
+        type: 3}
+      propertyPath: _defaultOffsetForFilling
+      value: 0.03
+      objectReference: {fileID: 0}
     - target: {fileID: 3618828202481760361, guid: cecf512b52fe2884aba599e671bc4bbf,
         type: 3}
       propertyPath: m_Name

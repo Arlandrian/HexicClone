@@ -90,6 +90,13 @@ public class HexBehaviour : MonoBehaviour
         }
     }
 
+    public void SetIndex(int x, int y, Transform newTartget)
+    {
+        _indexX = x;
+        _indexY = y;
+        _targetSocket = newTartget;
+    }
+
     public void Explode()
     {
         _isExploded = false;

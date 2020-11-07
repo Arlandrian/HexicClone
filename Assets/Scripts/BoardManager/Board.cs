@@ -27,6 +27,8 @@ public class Board : MonoBehaviour
     private float _hexEdgeLength = 0.54f;
     [SerializeField]
     private Vector3 _boardStartOffset;
+    [SerializeField]
+    private float _defaultOffsetForFilling = 5f;
 
     [Header("HexType Types"), Tooltip("Set the types of hexagons")]
     [SerializeField]
@@ -54,6 +56,8 @@ public class Board : MonoBehaviour
     [HideInInspector]
     private Transform _hexParent, _dotParent, _socketsParent;
 
+    private float HeightOfHex => SQRT_THREE * _hexEdgeLength * .5f;
+    private float WidthOfHex => 1.5f * _hexEdgeLength;
     #endregion
 
     private void Start()
@@ -173,18 +177,18 @@ public class Board : MonoBehaviour
         {
             for (int x = 0; x < _width; x++)
             {
-                CreateHex(x, y);
+                CreateHex(x, y, 0);
             }
         }
         
         ReplaceMatchingHexesStart();
     }
 
-    private void CreateHex(int x, int y)
+    private void CreateHex(int x, int y, float yOffset)
     {
         GameObject socket = _hexSockets[x, y];
         HexType type = GetRandomType();
-        GameObject go = Instantiate(type.Prefab, socket.transform.position + Vector3.up * 0f, type.Prefab.transform.rotation);
+        GameObject go = Instantiate(type.Prefab, socket.transform.position + Vector3.up * yOffset, type.Prefab.transform.rotation);
         go.transform.parent = _hexParent.transform;
         go.name = "Hex(" + x + "," + y + ")";
 
@@ -298,52 +302,111 @@ public class Board : MonoBehaviour
         foreach(var matchIndex in matches)
         {
             // Destroy and play particles of matches
-            _board[matchIndex.x, matchIndex.y].Explode();
+            _board[matchIndex.x, matchIndex.y]?.Explode();
             _board[matchIndex.x, matchIndex.y] = null;
         }
+
+        HashSet<int> columnnChecked = new HashSet<int>();
 
         // Notify all above hexes by changing their target position
         foreach(var matchIndex in matches)
         {
-            if(_board[matchIndex.x, matchIndex.y+1] != null)
+            if (!columnnChecked.Contains(matchIndex.x))
             {
-                NotifyDownIsEmpty(_board[matchIndex.x, matchIndex.y + 1]);
+                columnnChecked.Add(matchIndex.x);
+                ColumnFall(matchIndex.x);
             }
         }
-        
+
+        // Find Empty cells at top and fill them
+        // iterate all columns for empty cell
+        for (int x = 0; x < _width; x++)
+        {
+            // if cell is empty, look for down for an empty cell until hitting an existing cell (or bottom)
+            if(_board[x,_height-1] == null)
+            {
+                int depth = 1;
+                for (int y = _height - 1; y > 0 && _board[x, y] == null; y--)
+                {
+                    depth = y;
+                }
+
+                float offset = _defaultOffsetForFilling + ((float)depth * HeightOfHex);
+                for (int y = _height - 1; y > 0 && _board[x, y] == null; y--)
+                {
+                    CreateHex(x, y, offset);
+                }
+            }
+        }
     }
 
-    private void NotifyDownIsEmpty(HexBehaviour hex)
+    private void ColumnFall(int columnIndex)
     {
-        if(hex == null)
+        int bottom = FindMinEmpty(columnIndex);
+        int above = FindAboveHex(columnIndex, bottom);
+        while (above != -1 && bottom != -1)
         {
-            return;
+            _board[columnIndex, bottom] = _board[columnIndex, above];
+            _board[columnIndex, bottom].SetPosition(bottom, _hexSockets[columnIndex, bottom].transform);
+            _board[columnIndex, above] = null;
+            bottom = FindMinEmpty(columnIndex);
+            above = FindAboveHex(columnIndex, bottom);
         }
+        /*
 
-        int oldY = hex.IndexY;
-        int nextY = 0;
-        // Find min empty height
-        for (int y = hex.IndexY - 1 ; y >= 0; y--)
+        // Find not null hexes from bottom to top 
+        // Stack hexes to the empty locations
+        for (int y = 0; y < _height ; y++)
         {
-            if(_board[hex.IndexX, y] != null)
+            if (_board[columnIndex, y] != null)
             {
-                // hit a non empty cell, y+1 is empty
-                nextY = y + 1;
+                _board[columnIndex, bottom] = _board[columnIndex, y];
+                _board[columnIndex, bottom].SetPosition(bottom, _hexSockets[columnIndex, bottom].transform);
+
+                _board[columnIndex, y] = null;
+
+                bottom++;
+                // Find next bottom
+                for (int j = bottom; j < _height; j++)
+                {
+                    if (_board[columnIndex, j] == null)
+                    {
+                        bottom = j;
+                        break;
+                    }
+                }
+            }
+            if(bottom >= _height)
+            {
                 break;
             }
-        }
-        // move hex to next position
-        _board[hex.IndexX, nextY] = hex;
-        hex.SetPosition(nextY, _hexSockets[hex.IndexX, nextY].transform);
+        }*/
 
-        // empty old place
-        _board[hex.IndexX, oldY] = null;
+    }
 
-        // Notify above hexes
-        if(oldY + 1 < _height)
+    private int FindMinEmpty(int columnIndex)
+    {
+        // Find Empty bottom
+        for (int y = 0; y < _height; y++)
         {
-            NotifyDownIsEmpty(_board[hex.IndexX, oldY + 1]);
+            if (_board[columnIndex, y] == null)
+            {
+                return y;
+            }
         }
+        return -1;
+    }
+
+    private int FindAboveHex(int columnIndex, int rowIndex)
+    {
+        for (int y = rowIndex; y < _height; y++)
+        {
+            if(_board[columnIndex, y] != null)
+            {
+                return y;
+            }
+        }
+        return -1;
     }
 
     public void RotateDot(DotBehaviour dot, bool clockwise)
@@ -375,9 +438,17 @@ public class Board : MonoBehaviour
                 var child3 = children.ElementAt(2);
 
                 var temp = _board[child1.x, child1.y];
+
                 _board[child1.x, child1.y] = _board[child2.x, child2.y];
+                _board[child1.x, child1.y].SetIndex(child1.x, child1.y, _hexSockets[child1.x, child1.y].transform);
+
                 _board[child2.x, child2.y] = _board[child3.x, child3.y];
+                _board[child2.x, child2.y].SetIndex(child2.x, child2.y, _hexSockets[child2.x, child2.y].transform);
+
                 _board[child3.x, child3.y] = temp;
+                _board[child3.x, child3.y].SetIndex(child3.x, child3.y, _hexSockets[child3.x, child3.y].transform);
+
+
             });
     }
 
@@ -385,7 +456,11 @@ public class Board : MonoBehaviour
     {
         foreach(HexBehaviour hex in _board)
         {
-            if (hex != null && hex.IsMoving)
+            if(hex == null)
+            {
+                return true;
+            }
+            if (hex.IsMoving)
             {
                 return true;
             }
@@ -518,7 +593,51 @@ public class Board : MonoBehaviour
             _screenBottomLeftPosition = new Vector3(-Camera.main.orthographicSize * 9 / 16, -Camera.main.orthographicSize, 0.0f);
         }
 
-        Gizmos.DrawSphere(_screenBottomLeftPosition + _boardStartOffset, .1f);
+        Gizmos.DrawSphere(_screenBottomLeftPosition + _boardStartOffset, .2f);
+
+        if (_board != null)
+        {
+            for (int y = 0; y < _height; y++)
+            {
+                for (int x = 0; x < _width; x++)
+                {
+                    if (_board[x, y] && _hexSockets[x,y])
+                    {
+                        switch (_board[x, y].HexType.TypeName)
+                        {
+                            case "red":
+                                Gizmos.color = Color.red;
+                                Gizmos.DrawSphere(_hexSockets[x, y].transform.position, .3f);
+                                break;
+                            case "blue":
+                                Gizmos.color = Color.blue;
+                                Gizmos.DrawSphere(_hexSockets[x, y].transform.position, .3f);
+                                break;
+                            case "green":
+                                Gizmos.color = Color.green;
+                                Gizmos.DrawSphere(_hexSockets[x, y].transform.position, .3f);
+                                break;
+                            case "yellow":
+                                Gizmos.color = Color.yellow;
+                                Gizmos.DrawSphere(_hexSockets[x, y].transform.position, .3f);
+                                break;
+                            case "orange":
+                                Gizmos.color = Color.gray;
+                                Gizmos.DrawSphere(_hexSockets[x, y].transform.position, .3f);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        Gizmos.color = Color.white;
+                        Gizmos.DrawSphere(_hexSockets[x, y].transform.position, .3f);
+                    }
+
+                }
+            }
+        }
+
+
     }
 
 }

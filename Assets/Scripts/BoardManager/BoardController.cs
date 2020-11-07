@@ -128,16 +128,18 @@ public class BoardController
     private IEnumerator RotateDot(bool isClockwise)
     {
         _isBoardChanging = true;
-
+        bool flag = false;
         while (_rotationCounter < _rotationTime)
         {
             _board.RotateDot(_lastSelectedDot, isClockwise);
             yield return new WaitWhile(() => _lastSelectedDot.IsRotating);
 
-            List<Vector2Int> matches = _board.FindMatches();
-            if(matches.Count > 0)
+            List<Vector2Int> matchess = _board.FindMatches();
+            if(matchess.Count > 0)
             {
-                _board.ExplodeMatches(matches);
+                _board.ExplodeMatches(matchess);
+                MovementEvent?.Invoke();
+                flag = true;
                 break;
             }
             else
@@ -147,7 +149,17 @@ public class BoardController
             }
         }
 
-        yield return new WaitWhile(()=>_board.IsBoardChanging());
+        if (flag)
+        {
+            List<Vector2Int> matches;
+            do
+            {
+                yield return new WaitWhile(() => _board.IsBoardChanging());
+                yield return new WaitForSeconds(.1f);
+                matches = _board.FindMatches();
+                _board.ExplodeMatches(matches);
+            } while (matches.Count > 0);
+        }
 
         _isBoardChanging = false;
         _rotationCounter = 0;
