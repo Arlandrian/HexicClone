@@ -46,6 +46,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c5f2a097b02f36648bde84e1fc94a282, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _bombPrefab: {fileID: 9166553014110043492, guid: 185481716dba7614e80295811008d8ff,
+    type: 3}
 --- !u!198 &4499416640197487060
 ParticleSystem:
   m_ObjectHideFlags: 0

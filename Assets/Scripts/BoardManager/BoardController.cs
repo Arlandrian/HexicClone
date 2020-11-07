@@ -28,6 +28,7 @@ public class BoardController
     private bool _lastRotationDirection = false;
     private int _rotationCounter = 0;
     private int _rotationTime = 3;
+    private bool _isGameOver = false;
 
     #endregion
 
@@ -37,11 +38,13 @@ public class BoardController
         _board.HexExplodedEvent += OnHexExploded;
         InputManager.Instance.TouchEvent += OnTouch;
         InputManager.Instance.SwipeEvent += OnSwipe;
+        GameManager.Instance.SpawnBombEvent += OnBombSpawn;
+        GameManager.Instance.GameOverEvent += OnGameOver;
     }
 
     private void OnTouch(TouchEventArgs args)
     {
-        if (_isBoardChanging)
+        if (_isGameOver || _isBoardChanging)
         {
             return;
         }
@@ -81,7 +84,7 @@ public class BoardController
 
     private void OnSwipe(SwipeEventArgs args)
     {
-        if (_isBoardChanging)
+        if (_isGameOver || _isBoardChanging)
         {
             return;
         }
@@ -138,7 +141,7 @@ public class BoardController
             if(matchess.Count > 0)
             {
                 _board.ExplodeMatches(matchess);
-                MovementEvent?.Invoke();
+                OnMovement();
                 flag = true;
                 break;
             }
@@ -175,6 +178,25 @@ public class BoardController
     private void OnHexExploded()
     {
         ScoreEvent?.Invoke(15);
+    }
+
+    private void OnMovement()
+    {
+        MovementEvent?.Invoke();
+        _board.OnMovementIncremented();
+    }
+
+    private void OnBombSpawn()
+    {
+        _board.SpawnBomb();
+    }
+
+    private void OnGameOver()
+    {
+        _lastSelectedDot.Deselect();
+        _lastSelectedDot = null;
+        _isGameOver = true;
+        _board.DestroyBoard();
     }
 
     #endregion

@@ -39,6 +39,7 @@ public class Board : MonoBehaviour
     #region Events
 
     public event Action HexExplodedEvent;
+    public event Action MovementIncrementedEvent;
 
     #endregion
 
@@ -55,6 +56,8 @@ public class Board : MonoBehaviour
 
     [HideInInspector]
     private Transform _hexParent, _dotParent, _socketsParent;
+
+    private bool _shouldSpawnBomb = false;
 
     private float HeightOfHex => SQRT_THREE * _hexEdgeLength * .5f;
     private float WidthOfHex => 1.5f * _hexEdgeLength;
@@ -195,6 +198,14 @@ public class Board : MonoBehaviour
         HexBehaviour hexBehaviour = go.GetComponent<HexBehaviour>();
         hexBehaviour.Init(socket.transform, x, y, type);
         hexBehaviour.HexExplodedEvent += OnHexExpoded;
+
+        if (_shouldSpawnBomb)
+        {
+            _shouldSpawnBomb = false;
+            hexBehaviour.InitBomb();
+            MovementIncrementedEvent += hexBehaviour.OnMovementIncremented;
+        }
+
         _board[x, y] = hexBehaviour;
     }
 
@@ -340,74 +351,6 @@ public class Board : MonoBehaviour
         }
     }
 
-    private void ColumnFall(int columnIndex)
-    {
-        int bottom = FindMinEmpty(columnIndex);
-        int above = FindAboveHex(columnIndex, bottom);
-        while (above != -1 && bottom != -1)
-        {
-            _board[columnIndex, bottom] = _board[columnIndex, above];
-            _board[columnIndex, bottom].SetPosition(bottom, _hexSockets[columnIndex, bottom].transform);
-            _board[columnIndex, above] = null;
-            bottom = FindMinEmpty(columnIndex);
-            above = FindAboveHex(columnIndex, bottom);
-        }
-        /*
-
-        // Find not null hexes from bottom to top 
-        // Stack hexes to the empty locations
-        for (int y = 0; y < _height ; y++)
-        {
-            if (_board[columnIndex, y] != null)
-            {
-                _board[columnIndex, bottom] = _board[columnIndex, y];
-                _board[columnIndex, bottom].SetPosition(bottom, _hexSockets[columnIndex, bottom].transform);
-
-                _board[columnIndex, y] = null;
-
-                bottom++;
-                // Find next bottom
-                for (int j = bottom; j < _height; j++)
-                {
-                    if (_board[columnIndex, j] == null)
-                    {
-                        bottom = j;
-                        break;
-                    }
-                }
-            }
-            if(bottom >= _height)
-            {
-                break;
-            }
-        }*/
-
-    }
-
-    private int FindMinEmpty(int columnIndex)
-    {
-        // Find Empty bottom
-        for (int y = 0; y < _height; y++)
-        {
-            if (_board[columnIndex, y] == null)
-            {
-                return y;
-            }
-        }
-        return -1;
-    }
-
-    private int FindAboveHex(int columnIndex, int rowIndex)
-    {
-        for (int y = rowIndex; y < _height; y++)
-        {
-            if(_board[columnIndex, y] != null)
-            {
-                return y;
-            }
-        }
-        return -1;
-    }
 
     public void RotateDot(DotBehaviour dot, bool clockwise)
     {
@@ -468,9 +411,74 @@ public class Board : MonoBehaviour
         return false;
     }
 
+    public void SpawnBomb()
+    {
+        _shouldSpawnBomb = true;
+    }
+
+    internal void OnMovementIncremented()
+    {
+        MovementIncrementedEvent?.Invoke();
+    }
+
+    internal void DestroyBoard()
+    {
+        StartCoroutine(DestroyAll());
+    }
+
+    IEnumerator DestroyAll()
+    {
+        foreach (HexBehaviour hex in _board)
+        {
+            hex?.Explode();
+            yield return new WaitForSeconds(0.05f);
+        }
+        GameManager.Instance.ShowGameOver();
+    }
+
     #endregion
 
     #region Private Functions
+
+    private void ColumnFall(int columnIndex)
+    {
+        int bottom = FindMinEmpty(columnIndex);
+        int above = FindAboveHex(columnIndex, bottom);
+        while (above != -1 && bottom != -1)
+        {
+            _board[columnIndex, bottom] = _board[columnIndex, above];
+            _board[columnIndex, bottom].SetPosition(bottom, _hexSockets[columnIndex, bottom].transform);
+            _board[columnIndex, above] = null;
+            bottom = FindMinEmpty(columnIndex);
+            above = FindAboveHex(columnIndex, bottom);
+        }
+    }
+
+    private int FindMinEmpty(int columnIndex)
+    {
+        // Find Empty bottom
+        for (int y = 0; y < _height; y++)
+        {
+            if (_board[columnIndex, y] == null)
+            {
+                return y;
+            }
+        }
+        return -1;
+    }
+
+    private int FindAboveHex(int columnIndex, int rowIndex)
+    {
+        for (int y = rowIndex; y < _height; y++)
+        {
+            if (_board[columnIndex, y] != null)
+            {
+                return y;
+            }
+        }
+        return -1;
+    }
+
 
     private IEnumerable<HexBehaviour> GetChildrenHexes(int dotIndexX, int dotIndexY)
     {
@@ -565,6 +573,20 @@ public class Board : MonoBehaviour
         // replace old hex with new hex
         _board[hex.IndexX, hex.IndexY] = newHex;
         // Destroy old
+
+        Destroy(hex.gameObject);
+    }
+
+    private void DestroyHex(HexBehaviour hex)
+    {
+        //HexExplodedEvent
+        //MovementIncrementedEvent
+
+        if (hex.IsBomb)
+        {
+            MovementIncrementedEvent -= hex.OnMovementIncremented;
+        }
+
         Destroy(hex.gameObject);
     }
 
@@ -584,6 +606,7 @@ public class Board : MonoBehaviour
 
     #endregion
 
+#if UNITY_EDITOR
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -639,5 +662,5 @@ public class Board : MonoBehaviour
 
 
     }
-
+#endif
 }

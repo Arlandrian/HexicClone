@@ -47,6 +47,7 @@ public class InputManager : Singleton<InputManager>
     {
         _touchArgs = new TouchEventArgs();
         _swipeArgs = new SwipeEventArgs();
+        GameManager.Instance.GameOverEvent += () => Destroy(gameObject);
     }
 
     void Update()

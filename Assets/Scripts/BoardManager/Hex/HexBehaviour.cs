@@ -5,6 +5,9 @@ using UnityEngine;
 
 public class HexBehaviour : MonoBehaviour
 {
+    [SerializeField]
+    private GameObject _bombPrefab;
+
     #region Public Properties
 
     public int IndexX => _indexX;
@@ -13,6 +16,7 @@ public class HexBehaviour : MonoBehaviour
     public Transform TargetSocket => _targetSocket;
 
     public bool IsMoving => !_isExploded && !_isOnTarget;
+    public bool IsBomb => _isBomb;
 
     #endregion
 
@@ -23,6 +27,7 @@ public class HexBehaviour : MonoBehaviour
     #endregion
 
     #region Private Fields
+
     private int _indexX;
     private int _indexY;
     private HexType _type;
@@ -31,9 +36,12 @@ public class HexBehaviour : MonoBehaviour
     private bool _isExploded = false;
     private bool _isOnTarget = false;
 
+    private BombBehaviour _bomb;
+    private bool _isBomb = false;
+    private int _bombRemainingMovement;
+
     private float _speed = 0.0f;
     private float _gravity;
-
     #endregion
 
     private void Awake()
@@ -47,6 +55,15 @@ public class HexBehaviour : MonoBehaviour
         _indexX = x;
         _indexY = y;
         _type = type;
+    }
+
+    public void InitBomb()
+    {
+        _isBomb = true;
+        _bombRemainingMovement = GlobalConfigs.BombMovementLimit;
+        GameObject go = Instantiate(_bombPrefab, transform.position, transform.rotation, transform);
+        _bomb = go.GetComponent<BombBehaviour>();
+        _bomb.Init();
     }
     
     void Update()
@@ -101,7 +118,10 @@ public class HexBehaviour : MonoBehaviour
     {
         _isExploded = false;
         GetComponent<ParticleSystem>().Play();
-        transform.GetChild(0).gameObject.SetActive(false);
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            transform.GetChild(i).gameObject.SetActive(false);
+        }
         Destroy(gameObject, 3f);
         HexExplodedEvent?.Invoke();
     }
@@ -109,5 +129,13 @@ public class HexBehaviour : MonoBehaviour
     public bool IsSameType(HexBehaviour other)
     {
         return this._type.Id == other.HexType.Id;
+    }
+
+    public void OnMovementIncremented()
+    {
+        if (_bomb)
+        {
+            _bomb.OnMovementIncremented();
+        }
     }
 }
